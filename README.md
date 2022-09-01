@@ -1,24 +1,15 @@
-# Rust/Actix Framework
+# Rust/Axum Framework
 
-[![Build Status](https://travis-ci.com/ddimaria/rust-actix-framework.svg?branch=master)](https://travis-ci.com/ddimaria/rust-actix-framework)
-
-A web framework built upon Actix Web 3.x using the Rust language.
-
-To view the frontend companion, check out [rust-actix-framework-front](https://github.com/ddimaria/rust-actix-framework-front).
-
-## Motivation
-
-Actix Web is a fast, powerful web framework for building web applications in Rust.
-This project aims to create ergonomic abstractions comparable to frameworks in
-other languages while attempting to maintain the performance benefits of Rust and Actix.
+A web framework built upon Axum using the Rust language.
+Based on the Rust/Actix sample repository https://github.com/ddimaria/rust-actix-framework
 
 ## Features
 
 - Actix 3.x HTTP Server
-- Multi-Database Support (CockroachDB, Postgres, MySQL, Sqlite)
-- JWT Support
-- Async Caching Layer with a Simple API
-- Public and Secure Static File Service
+- ~~Multi-Database Support (CockroachDB, Postgres, MySQL, Sqlite)~~
+- ~~JWT Support~~
+- ~~Async Caching Layer with a Simple API~~
+- ~~Public and Secure Static File Service~~
 - Diesel Database Operations are Non-Blocking
 - Filesystem Organized for Scale
 - .env for Local Development
@@ -30,25 +21,22 @@ other languages while attempting to maintain the performance benefits of Rust an
 - Secure Argon2i Password Hashing
 - CORS Support
 - Paginated Results
-- Unit and Integration Tests
-- Test Coverage Reports
+- ~~Unit and Integration Tests~~
+- ~~Test Coverage Reports~~
 - Dockerfile for Running the Server in a Container
 - TravisCI Integration
 
 ## Featured Packages
 
-- `Argon2i`: Argon2i Password Hasning
-- `actix-cors`: CORS Support
-- `actix-identity`: User Authentication
-- `actix-redis` and `redis-async`: Async Caching Layer
-- `actix-web`: Actix Web Server
+- `Argon2i`: Argon2i Password Hashing
+- `axum`: Axum Web Server
+- `axum`: Axum Web Server
+- `axum-sessions`: User Authentication
 - `derive_more`: Error Formatting
 - `diesel`: ORM that Operates on Several Databases
 - `dotenv`: Configuration Loader (.env)
 - `envy`: Deserializes Environment Variables into a Config Struct
-- `jsonwebtoken`: JWT encoding/decoding
 - `kcov`: Coverage Analysis
-- `listenfd`: Listens for Filesystem Changes
 - `rayon`: Parallelize
 - `r2d2`: Database Connection Pooling
 - `validator`: Validates incoming Json
@@ -61,134 +49,19 @@ other languages while attempting to maintain the performance benefits of Rust an
 - [Autoreloading](#autoreloading)
 - [Tests](#tests)
   - [Running Tests](#running-tests)
-  - [Test Covearage](#test-covearage)
 - [Docker](#docker)
   - [Docker Compose](#docker-compose)
 - [Generating documentation](#generating-documentation)
-- [The #[timestamps] proc macro](#the-timestamps-proc-macro)
 - [The paginate! declaritive macro](#the-paginate-declaritive-macro)
-- [Public Static Files](#public-static-files)
-- [Secure Static Files](#secure-static-files)
-- [Application State](#application-state)
-  - [Helper Functions](#helper-functions)
-- [Application Cache](#application-cache)
-  - [Helper Functions](#helper-functions)
-- [Non-Blocking Diesel Database Operations](#non-blocking-diesel-database-operations)
 - [Endpoints](#endpoints)
   - [Healthcheck](#healthcheck)
   - [Login](#login)
-  - [Logout](#logout)
   - [Get All Users](#get-all-users)
   - [Get a User](#get-a-user)
   - [Create a User](#create-a-user)
-  - [Update a User](#update-a-user)
-  - [Delete a User](#delete-a-user)
 - [License](#license)
 
-## Quick Installation
-
-You can skip the first portion and jump ahead to the `Diesel CLI` section of this setup by copying the skeleton code in the `/examples` folder.
-
 ## Installation
-
-First, create a new project:
-
-```shell
-cargo new rest_server --bin
-```
-
-Next, cd into the `rest_server` folder and add the following to Cargo.toml:
-
-```toml
-[package]
-name = "rest_server"
-version = "0.1.0"
-authors = ["YOUR NAME <yourname@yourdomain.com>"]
-edition = "2018"
-
-[dependencies]
-actix_framework = "0.2.0"
-actix-cors = "0.2.0"
-actix-rt = "1"
-actix-web = "3"
-dotenv = "0.14"
-env_logger = "0.6"
-listenfd = "0.3"
-
-
-[features]
-cockroach = []
-mysql = []
-postgres = []
-sqlite = []
-default = ["mysql"]
-```
-
-With that setup in place, you can add in the server code in `/src/main.rs`:
-
-```rust
-use actix_cors::Cors;
-use actix_web::{middleware::Logger, App, HttpServer};
-use listenfd::ListenFd;
-use actix_framework::auth::get_identity_service;
-use actix_framework::cache::add_cache;
-use actix_framework::config::CONFIG;
-use actix_framework::database::add_pool;
-use actix_framework::routes::routes;
-use actix_framework::state::new_state;
-
-#[actix_rt::main]
-async fn main() -> std::io::Result<()> {
-    dotenv::dotenv().ok();
-    env_logger::init();
-
-    // Create the application state
-    // String is used here, but it can be anything
-    // Invoke in hanlders using data: AppState<'_, String>
-    let data = new_state::<String>();
-
-    // Initialize the file system listener
-    let mut listenfd = ListenFd::from_env();
-    let mut server = HttpServer::new(move || {
-        App::new()
-            // Add the default logger
-            .wrap(Logger::default())
-
-            // Accept all CORS
-            // For more options, see https://docs.rs/actix-cors
-            .wrap(Cors::new().supports_credentials().finish())
-
-            // Adds Identity Service for use in the Actix Data Extractor
-            // In a handler, add "id: Identity" param for auto extraction
-            .wrap(get_identity_service())
-
-            // Adds Application State for use in the Actix Data Extractor
-            // In a handler, add "data: AppState<'_, String>" param for auto extraction
-            .app_data(data.clone())
-
-            // Adds the Redis Cache for use in the Actix Data Extractor
-            // In a handler, add "cache: Cache" param for auto extraction
-            .configure(add_cache)
-
-            // Adds a Database Pool for use in the Actix Data Extractor
-            // In a handler, add "pool: Data<PoolType>" param for auto extraction
-            .configure(add_pool)
-
-            // Pull in default framework defaults
-            // This can be removed if they're not needed
-            .configure(routes)
-    });
-
-    server = if let Some(l) = listenfd.take_tcp_listener(0)? {
-        server.listen(l)?
-    } else {
-        server.bind(&CONFIG.server)?
-    };
-
-    server.run().await
-}
-
-```
 
 Create an .env file at the root of your project:
 
@@ -206,7 +79,7 @@ JWT_EXPIRATION=24
 JWT_KEY=4125442A472D4B614E645267556B58703273357638792F423F4528482B4D6251
 REDIS_URL=127.0.0.1:6379
 RUST_BACKTRACE=0
-RUST_LOG="actix_framework=info,actix_web=info,actix_server=info,actix_redis=trace"
+RUST_LOG="rust_axum_framework=info,axum=info"
 SERVER=127.0.0.1:3000
 SESSION_KEY=4125442A472D4B614E645267556B58703273357638792F423F4528482B4D6251
 SESSION_NAME=auth
@@ -215,19 +88,6 @@ SESSION_TIMEOUT=20
 ```
 
 **IMPORTANT:** Change .env values for your setup, paying special attention to the salt and various keys.
-
-After you set the `DATABASE` value in .env, you'll need it to match the `default` value in the `features` section in `Cargo.toml` with the `DATABASE` value in .env:
-
-```toml
-[features]
-cockroach = []
-mysql = []
-postgres = []
-sqlite = []
-default = ["mysql"]
-```
-
-_note:_ Only supply a SINGLE database in the `default` array.
 
 Next, you'll need to install the Diesel CLI:
 
@@ -304,21 +164,6 @@ To run all of the tests:
 cargo test
 ```
 
-### Test Coverage
-
-I created a repo on DockerHub that I'll update with each Rust version
-(starting at 1.37), whose tags will match the Rust version.
-
-In the root of the project:
-
-```shell
-docker run -it --rm --security-opt seccomp=unconfined --volume "${PWD}":/volume --workdir /volume ddimaria/rust-kcov:1.37 --exclude-pattern=/.cargo,/usr/lib,/src/main.rs,src/server.rs
-```
-
-_note: coverage takes a long time to run (up to 30 mins)._
-
-You can view the HTML output of the report at `target/cov/index.html`
-
 ## Docker
 
 To build a Docker image of the application:
@@ -341,57 +186,10 @@ To run dependencies for this application, simply invoke docker-compose:
 docker-compose up
 ```
 
-_Currently, only MySQL is in there, but more to come_
-
 ## Generating documentation
 
 ```shell
 cargo doc --no-deps --open
-```
-
-## The #[timestamps] proc macro
-
-The `#[timestamps]` macro will automatically append the following fields to a model struct:
-
-```rust
-pub created_by: String,
-pub created_at: NaiveDateTime,
-pub updated_by: String,
-pub updated_at: NaiveDateTime,
-```
-
-Example:
-
-```rust
-use chrono::NaiveDateTime;
-use proc_macro::timestamps;
-
-#[timestamps]
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Queryable, Identifiable, Insertable)]
-pub struct User {
-    pub id: String,
-    pub first_name: String,
-    pub last_name: String,
-    pub email: String,
-    pub password: String,
-}
-```
-
-This will expand to:
-
-```rust
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Queryable, Identifiable, Insertable)]
-pub struct User {
-    pub id: String,
-    pub first_name: String,
-    pub last_name: String,
-    pub email: String,
-    pub password: String,
-    pub created_by: String,
-    pub created_at: NaiveDateTime,
-    pub updated_by: String,
-    pub updated_at: NaiveDateTime,
-}
 ```
 
 ## The paginate! declaritive macro
@@ -429,167 +227,6 @@ pub fn get_all(
 }
 ```
 
-## Public Static Files
-
-Static files are served up from the `/static` folder.
-Directory listing is turned off.
-Index files are supported (`index.html`).
-
-Example:
-
-```shell
-curl -X GET http://127.0.0.1:3000/test.html
-```
-
-## Secure Static Files
-
-To serve static files to authenticated users only, place them in the `/static-secure` folder.
-These files are referenced using the root-level `/secure` path.
-
-Example:
-
-```shell
-curl -X GET http://127.0.0.1:3000/secure/test.html
-```
-
-## Application State
-
-A shared, mutable hashmap is automatically added to the server. To invoke this data in a handler, simply add `data: AppState<'_, String>` to the handler's signature.
-
-### Helper Functions
-
-#### get\<T\>(data: AppState\<T\>, key: &str) -> Option\<T\>
-
-Retrieves a copy of the entry in application state by key.
-
-Example:
-
-```rust
-use crate::state::get;
-
-pub async fn handle(data: AppState<'_, String>) -> impl Responder {
-  let key = "SOME_KEY";
-  let value = get(data, key);
-  assert_eq!(value, Some("123".to_string()));
-}
-```
-
-#### set\<T\>(data: AppState\<T\>, key: &str, value: T) -> Option\<T\>
-
-Inserts or updates an entry in application state.
-
-Example:
-
-```rust
-use crate::state::set;
-
-pub async fn handle(data: AppState<'_, String>) -> impl Responder {
-  let key = "SOME_KEY";
-  let value = set(data, key, "123".into());
-  assert_eq!(value, None)); // if this is an insert
-  assert_eq!(value, Some("123".to_string())); // if this is an update
-}
-```
-
-#### delete\<T\>(data: AppState\<T\>, key: &str) -> Option\<T\>
-
-Deletes an entry in application state by key.
-
-Example:
-
-```rust
-use crate::state::get;
-
-pub async fn handle(data: AppState<'_, String>) -> impl Responder {
-  let key = "SOME_KEY";
-  let value = delete(data, key);
-  assert_eq!(value, None);
-}
-```
-
-## Application Cache
-
-Asynchronous access to redis is automatically added to the server if a value is provided for the `REDIS_URL` environment variable.
-To invoke this data in a handler, simply add `cache: Cache` to the handler's signature.
-
-### Helper Functions
-
-#### get(cache: Cache, key: &str) -> Result<String, ApiError>
-
-Retrieves a copy of the entry in the application cache by key.
-
-Example:
-
-```rust
-use crate::cache::{get, Cache};
-
-pub async fn handle(cache: Cache) -> impl Responder {
-  let key = "SOME_KEY";
-  let value = get(cache, key).await?;
-  assert_eq!(value, "123");
-}
-```
-
-#### set(cache: Cache, key: &str, value: &str) -> Result<String, ApiError>
-
-Inserts or updates an entry in the application cache.
-
-Example:
-
-```rust
-use crate::cache::{set, Cache};
-
-pub async fn handle(cache: Cache) -> impl Responder {
-  let key = "SOME_KEY";
-  set(cache, key, "123").await?;
-}
-```
-
-#### delete(cache: Cache, key: &str) -> Result<String, ApiError>
-
-Deletes an entry in the application cache by key.
-
-Example:
-
-```rust
-use crate::cache::{delete, Cache};
-
-pub async fn handle(cache: Cache) -> impl Responder {
-  let key = "SOME_KEY";
-  delete(cache, key).await?;
-}
-```
-
-## Non-Blocking Diesel Database Operations
-
-When accessing a database via Diesel, operations block the main server thread.
-This blocking can be mitigated by running the blocking code in a thread pool from within the handler.
-
-Example:
-
-```rust
-pub async fn get_user(
-    user_id: Path<Uuid>,
-    pool: Data<PoolType>,
-) -> Result<Json<UserResponse>, ApiError> {
-    let user = block(move || find(&pool, *user_id)).await?;
-    respond_json(user)
-}
-```
-
-Blocking errors are automatically converted into ApiErrors to keep the api simple:
-
-```rust
-impl From<BlockingError<ApiError>> for ApiError {
-    fn from(error: BlockingError<ApiError>) -> ApiError {
-        match error {
-            BlockingError::Error(api_error) => api_error,
-            BlockingError::Canceled => ApiError::BlockingError("Thread blocking error".into()),
-        }
-    }
-}
-```
-
 ## Endpoints
 
 ### Healthcheck
@@ -600,12 +237,7 @@ Determine if the system is healthy.
 
 #### Response
 
-```json
-{
-  "status": "ok",
-  "version": "0.1.0"
-}
-```
+`200 OK`
 
 Example:
 

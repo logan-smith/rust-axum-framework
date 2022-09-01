@@ -10,7 +10,9 @@ use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Queryable, Identifiable, Insertable)]
+#[derive(
+    Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Queryable, Identifiable, Insertable,
+)]
 pub struct User {
     pub id: String,
     pub first_name: String,
@@ -85,7 +87,7 @@ pub async fn get_user_by_auth(
         .filter(email.eq(user_email))
         .filter(password.eq(user_password))
         .first::<User>(&conn)
-        .map_err(|_| ApiError::Unauthorized(format!("Invalid Credentials")))?;
+        .map_err(|_| ApiError::Unauthorized("Invalid Credentials".to_string()))?;
     Ok(user.into())
 }
 

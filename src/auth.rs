@@ -8,7 +8,7 @@ use argon2rs::argon2i_simple;
 /// Uses the argon2i algorithm.
 /// auth_salt is environment-configured.
 pub fn hash(password: &str) -> String {
-    argon2i_simple(&password, &CONFIG.auth_salt)
+    argon2i_simple(password, &CONFIG.auth_salt)
         .iter()
         .map(|b| format!("{:02x}", b))
         .collect()
@@ -17,7 +17,6 @@ pub fn hash(password: &str) -> String {
 #[cfg(test)]
 pub mod tests {
     use super::*;
-    static EMAIL: &str = "test@test.com";
 
     #[test]
     fn it_hashes_a_password() {
