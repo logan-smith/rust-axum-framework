@@ -105,8 +105,8 @@ pub fn paginate<T>(
 #[macro_export]
 macro_rules! paginate {
     ($pool:expr, $model:ident, $model_type:ident, $params:ident, $response_type:ident, $base:ident) => {{
-        use crate::pagination::{get_pagination, paginate};
         use diesel::dsl::count_star;
+        use $crate::pagination::{get_pagination, paginate};
 
         let conn = $pool.get()?;
         let total = $model.select(count_star()).first(&conn)?;

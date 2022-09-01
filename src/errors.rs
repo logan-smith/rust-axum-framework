@@ -12,7 +12,7 @@ use diesel::{
 use log::*;
 use uuid::parser::ParseError;
 
-#[derive(Debug, Display, PartialEq)]
+#[derive(Debug, Display, PartialEq, Eq)]
 pub enum ApiError {
     BadRequest(String),
     BlockingError(String),

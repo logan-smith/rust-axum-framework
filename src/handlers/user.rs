@@ -1,7 +1,7 @@
 use axum::extract::Extension;
 use axum::{
-    body::Body, extract::Path, extract::Query, extract::RequestParts, http::Request,
-    http::StatusCode, response::IntoResponse, Json,
+    body::Body, extract::Path, extract::Query, extract::RequestParts, http::StatusCode,
+    response::IntoResponse, Json,
 };
 use diesel::pg::PgConnection;
 use http::header::HeaderValue;
@@ -9,7 +9,7 @@ use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::config::{Config, CONFIG};
+use crate::config::CONFIG;
 use crate::database::Pool;
 use crate::errors::ApiError;
 use crate::models::user::{create_user, get_user, get_users, NewUser, User};

@@ -10,7 +10,7 @@ use axum_sessions::async_session::Session;
 #[allow(clippy::missing_errors_doc)]
 pub async fn authenticate<B: Send>(req: Request<B>, next: Next<B>) -> Result<Response, StatusCode> {
     tracing::info!("Middleware: checking if user exists");
-    let session = req
+    let _session = req
         .extensions()
         .get::<Session>()
         .ok_or(StatusCode::UNAUTHORIZED)?;
