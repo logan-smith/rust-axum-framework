@@ -34,9 +34,10 @@ pub mod middlewares;
 pub mod models;
 pub mod pagination;
 pub mod schema;
+pub mod tests;
 pub mod validate;
 
-const SESSION_COOKIE_NAME: &str = "fuck_insurance_session";
+const SESSION_COOKIE_NAME: &str = "rust_axum_session";
 
 #[tokio::main]
 async fn main() {
@@ -53,7 +54,6 @@ async fn main() {
     let cors = CorsLayer::new()
         .allow_methods(Any)
         .allow_headers(Any)
-        // allow requests from any origin
         .allow_origin(Any);
 
     let manager = ConnectionManager::<PgConnection>::new(config.database_url);

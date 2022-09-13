@@ -36,5 +36,8 @@ uuid = { version = "0.7", features = ["serde", "v4"] }
 validator = "0.8.0"
 validator_derive = "0.8.0"
 
+# Local dependencies
+proc_macro = { path = "src/proc_macro" }
+
 [dev-dependencies]
 actix-http-test = "0.2.0"

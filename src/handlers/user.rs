@@ -55,13 +55,16 @@ pub async fn create_user_endpoint(
     Json(payload): Json<CreateUserRouteParams>,
     Extension(pool): Extension<Pool<PgConnection>>,
 ) -> Result<impl IntoResponse, ApiError> {
+    let user_id = Uuid::new_v4();
     // From impl hashes password
     let new_user: User = NewUser {
-        id: Uuid::new_v4().to_string(),
+        id: user_id.to_string(),
         first_name: payload.first_name,
         last_name: payload.last_name,
         email: payload.email,
         password: payload.password,
+        created_by: user_id.to_string(), // TODO: check current session for user_id to set here
+        updated_by: user_id.to_string(),
     }
     .into();
 

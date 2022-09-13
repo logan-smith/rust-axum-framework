@@ -1,10 +1,8 @@
 #[cfg(test)]
 pub mod tests {
-    use crate::auth::get_identity_service;
-    use crate::cache::add_cache;
     use crate::config::CONFIG;
     use crate::database::{add_pool, init_pool, Pool};
-    use crate::handlers::auth::LoginRequest;
+    use crate::handlers::auth::LoginRouteParams;
     use crate::pagination::PaginationRequest;
     use crate::routes::routes;
     use crate::state::{new_state, AppState};

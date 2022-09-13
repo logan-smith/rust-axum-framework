@@ -43,7 +43,6 @@ Based on the Rust/Actix sample repository https://github.com/ddimaria/rust-actix
 
 # Table of Contents
 
-- [Quick Installation](#quick-installation)
 - [Installation](#installation)
 - [Running the Server](#running-the-server)
 - [Autoreloading](#autoreloading)
@@ -52,6 +51,7 @@ Based on the Rust/Actix sample repository https://github.com/ddimaria/rust-actix
 - [Docker](#docker)
   - [Docker Compose](#docker-compose)
 - [Generating documentation](#generating-documentation)
+- [The #[timestamps] proc macro](#the-timestamps-proc-macro)
 - [The paginate! declaritive macro](#the-paginate-declaritive-macro)
 - [Endpoints](#endpoints)
   - [Healthcheck](#healthcheck)
@@ -190,6 +190,51 @@ docker-compose up
 
 ```shell
 cargo doc --no-deps --open
+```
+
+## The #[timestamps] proc macro
+
+The `#[timestamps]` macro will automatically append the following fields to a model struct:
+
+```rust
+pub created_by: String,
+pub created_at: NaiveDateTime,
+pub updated_by: String,
+pub updated_at: NaiveDateTime,
+```
+
+Example:
+
+```rust
+use chrono::NaiveDateTime;
+use proc_macro::timestamps;
+
+#[timestamps]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Queryable, Identifiable, Insertable)]
+pub struct User {
+    pub id: String,
+    pub first_name: String,
+    pub last_name: String,
+    pub email: String,
+    pub password: String,
+}
+```
+
+This will expand to:
+
+```rust
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Queryable, Identifiable, Insertable)]
+pub struct User {
+    pub id: String,
+    pub first_name: String,
+    pub last_name: String,
+    pub email: String,
+    pub password: String,
+    pub created_by: String,
+    pub created_at: NaiveDateTime,
+    pub updated_by: String,
+    pub updated_at: NaiveDateTime,
+}
 ```
 
 ## The paginate! declaritive macro
