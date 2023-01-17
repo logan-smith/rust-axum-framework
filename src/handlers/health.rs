@@ -1,17 +1,17 @@
-use axum::{http::StatusCode, response::IntoResponse};
+use axum::http::StatusCode;
 
 /// Handler to get the liveness of the service
-pub async fn get_health_endpoint() -> impl IntoResponse {
+pub async fn get_health_endpoint() -> StatusCode {
     StatusCode::OK
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-//     #[actix_rt::test]
-//     async fn test_get_health() {
-//         let response = get_health().await.unwrap();
-//         assert_eq!(response.into_inner().status, "ok".to_string());
-//     }
-// }
+    #[tokio::test]
+    async fn test_get_health() {
+        let response = get_health_endpoint().await;
+        assert_eq!(response, StatusCode::OK);
+    }
+}
