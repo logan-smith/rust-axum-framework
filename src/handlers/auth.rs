@@ -1,5 +1,6 @@
-use axum::extract::Extension;
+use axum::extract::State;
 use axum::{http::StatusCode, response::IntoResponse, Json};
+// use axum_sessions::async_session::Session;
 use diesel::pg::PgConnection;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
@@ -25,9 +26,10 @@ pub struct LoginRouteParams {
 }
 
 /// Login a user
+/// Create and remember their JWT
 pub async fn login(
+    State(pool): State<Pool<PgConnection>>,
     Json(payload): Json<LoginRouteParams>,
-    Extension(pool): Extension<Pool<PgConnection>>,
 ) -> Result<impl IntoResponse, ApiError> {
     tracing::info!("Log in request for user: {}", payload.email);
     validate(&payload)?;
@@ -35,7 +37,7 @@ pub async fn login(
     let hashed = hash(&payload.password);
     let user = get_user_by_auth(pool, &payload.email, &hashed).await?;
 
-    // You can save additional session info like this
+    // Save additional session info like this
     // session.insert("user_id", user.id).unwrap();
     Ok((StatusCode::OK, Json::<UserResponse>(user)))
 }

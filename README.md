@@ -5,7 +5,7 @@ Based on the Rust/Actix sample repository https://github.com/ddimaria/rust-actix
 
 ## Features
 
-- Actix 3.x HTTP Server
+- Axum 0.6.x HTTP Server
 - ~~Multi-Database Support (CockroachDB, Postgres, MySQL, Sqlite)~~
 - ~~JWT Support~~
 - ~~Async Caching Layer with a Simple API~~
@@ -29,7 +29,6 @@ Based on the Rust/Actix sample repository https://github.com/ddimaria/rust-actix
 ## Featured Packages
 
 - `Argon2i`: Argon2i Password Hashing
-- `axum`: Axum Web Server
 - `axum`: Axum Web Server
 - `axum-sessions`: User Authentication
 - `derive_more`: Error Formatting

@@ -1,0 +1,4 @@
+-- Your SQL goes here
+insert into users (id, first_name, last_name, email, password, role, created_by, updated_by) values 
+('00000000-0000-0000-0000-000000000000', 'admin', 'admin', 'admin@admin.com', 'ddd4c1eb17b3d6cc58cfed97f525005664a92a332b68f1e8d4fe0315e1524609', 'Admin','00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000'),
+('93077622-2d21-4861-bbc2-69eb8d241af1', 'test', 'user', 'test@test.com', 'ddd4c1eb17b3d6cc58cfed97f525005664a92a332b68f1e8d4fe0315e1524609', 'User', '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000'); -- password is: password

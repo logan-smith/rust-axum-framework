@@ -1,5 +1,3 @@
-//! Auto-generated file from Diesel
-
 table! {
     users (id) {
         id -> Varchar,
@@ -7,6 +5,7 @@ table! {
         last_name -> Varchar,
         email -> Varchar,
         password -> Varchar,
+        role -> Varchar,
         created_by -> Varchar,
         created_at -> Timestamp,
         updated_by -> Varchar,

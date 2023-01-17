@@ -1,17 +1,18 @@
-use axum::extract::Extension;
-use axum::{
-    body::Body, extract::Path, extract::Query, extract::RequestParts, http::StatusCode,
-    response::IntoResponse, Json,
-};
+use std::str::FromStr;
+
+use axum::extract::State;
+use axum::{extract::Path, extract::Query, http::StatusCode, response::IntoResponse, Json};
 use diesel::pg::PgConnection;
-use http::header::HeaderValue;
+// use http::header::HeaderValue;
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
+use tracing::instrument;
 use uuid::Uuid;
 
-use crate::config::CONFIG;
+// use crate::config::CONFIG;
 use crate::database::Pool;
 use crate::errors::ApiError;
+use crate::models::role::Role;
 use crate::models::user::{create_user, get_user, get_users, NewUser, User};
 use crate::pagination::{PaginationRequest, PaginationResponse};
 
@@ -21,6 +22,7 @@ pub struct CreateUserRouteParams {
     pub last_name: String,
     pub email: String,
     pub password: String,
+    pub role: String, // TODO: try making this a Role
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -29,6 +31,7 @@ pub struct UserResponse {
     pub first_name: String,
     pub last_name: String,
     pub email: String,
+    pub role: Role,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -47,14 +50,18 @@ impl From<User> for UserResponse {
             first_name: user.first_name,
             last_name: user.last_name,
             email: user.email,
+            role: Role::from_str(&user.role).unwrap(),
         }
     }
 }
 
+/// POST "/users"
+#[instrument(skip(pool))]
 pub async fn create_user_endpoint(
+    State(pool): State<Pool<PgConnection>>,
     Json(payload): Json<CreateUserRouteParams>,
-    Extension(pool): Extension<Pool<PgConnection>>,
 ) -> Result<impl IntoResponse, ApiError> {
+    tracing::debug!("incoming request is {:?}", payload);
     let user_id = Uuid::new_v4();
     // From impl hashes password
     let new_user: User = NewUser {
@@ -63,6 +70,7 @@ pub async fn create_user_endpoint(
         last_name: payload.last_name,
         email: payload.email,
         password: payload.password,
+        role: payload.role,
         created_by: user_id.to_string(), // TODO: check current session for user_id to set here
         updated_by: user_id.to_string(),
     }
@@ -72,49 +80,63 @@ pub async fn create_user_endpoint(
     Ok((StatusCode::CREATED, Json(insert_response)))
 }
 
+/// GET "/users/:id"
+#[instrument(skip(pool))]
 pub async fn get_user_endpoint(
     Path(user_id): Path<Uuid>,
-    Extension(pool): Extension<Pool<PgConnection>>,
+    State(pool): State<Pool<PgConnection>>,
 ) -> Result<impl IntoResponse, ApiError> {
     let user = get_user(pool, user_id).await?;
     Ok((StatusCode::OK, Json::<UserResponse>(user)))
 }
 
+/// PUT "/users/:id"
+#[instrument(skip(pool))]
+pub async fn update_user_endpoint(
+    Path(user_id): Path<Uuid>,
+    State(pool): State<Pool<PgConnection>>,
+) -> Result<impl IntoResponse, ApiError> {
+    let user = get_user(pool, user_id).await?;
+    Ok((StatusCode::OK, Json::<UserResponse>(user)))
+}
+
+/// GET "/users"
+#[instrument(skip(pool))]
 pub async fn get_users_endpoint(
+    State(pool): State<Pool<PgConnection>>,
     Query(params): Query<PaginationRequest>,
-    // req: Request<Body>,
-    Extension(pool): Extension<Pool<PgConnection>>,
 ) -> Result<impl IntoResponse, ApiError> {
     // TODO: fix get_base method
     // get_base is not currently working
     // let base = get_base(RequestParts::new(req));
     let base = "base".to_string();
     let paginated_users = get_users(pool, params, base).await?;
+    tracing::debug!("GET Users response is {:?}", paginated_users);
     Ok((
         StatusCode::OK,
         Json::<PaginationResponse<UsersResponse>>(paginated_users),
     ))
 }
 
-/// This method is currently failing to properly extract the RequestParts
-/// scheme://hostpath
-/// ex: http:127.0.0.1:8000/path
-fn get_base(req: RequestParts<Body>) -> String {
-    let scheme = req.uri().scheme_str().unwrap_or("http");
-    let mut host = "";
-    let default_host = HeaderValue::from_static(&CONFIG.server);
-    if let Some(headers) = req.headers() {
-        host = &headers
-            .get("host")
-            .unwrap_or(&default_host)
-            .to_str()
-            .unwrap_or("");
-    };
+// This method is currently failing to properly extract the RequestParts
+// scheme://hostpath
+// ex: http:127.0.0.1:8000/path
+// fn get_base(req: RequestParts<Body>) -> String {
+//     let scheme = req.uri().scheme_str().unwrap_or("http");
+//     let mut host = "";
+//     let default_host = HeaderValue::from_static(&CONFIG.server);
+//     if let Some(headers) = req.headers() {
+//         host = &headers
+//             .get("host")
+//             .unwrap_or(&default_host)
+//             .to_str()
+//             .unwrap_or("");
+//     };
 
-    let path = req.uri().path();
+//     let path = req.uri().path();
 
-    format!("{}://{}{}", scheme, host, path)
-}
+//     format!("{}://{}{}", scheme, host, path)
+// }
 
 // TODO: convert update_user and delete_user to Axum
 

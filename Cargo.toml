@@ -10,8 +10,8 @@ edition = "2018"
 
 [dependencies]
 argon2rs = "0.2.1"
-axum = "0.4.8"
-axum-sessions = "0.2.0"
+axum = "0.6.1"
+axum-sessions = "0.4.1"
 chrono = { version = "0.4", features = ["serde"] }
 derive_more = "0.15"
 diesel = { version = "1.4.4", features = ["chrono","postgres", "r2d2", "uuidv07"] }
@@ -28,6 +28,8 @@ r2d2-diesel = "1.0.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_derive = "1.0"
 serde_json = "1.0.79"
+strum = "0.24"
+strum_macros = "0.24"
 tokio = { version = "1.0", features = ["full"] }
 tower-http = { version = "0.3.4", features = ["cors", "trace"] }
 tracing = "0.1"
